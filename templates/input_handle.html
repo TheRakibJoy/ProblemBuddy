@@ -1,0 +1,15 @@
+{% extends 'main.html' %}
+
+{% block content%}
+
+
+   <div style="display: grid; place-content: center; min-height: 100vh">
+        <form method="POST" style="background: ghostwhite; display: flex; flex-direction: column; align-items: center; border: 1px solid rgba(0,0,0,0.3); padding: 35px; box-shadow: 2px 4px 13px rgba(0,0,0,0.2); border-radius: 10px;">
+            {% csrf_token %}
+            <label style="margin-bottom: 8px;">Enter a Handle Which is Inspiring to You</label>
+            <input style="margin-bottom: 8px; padding: 4px; border-radius: 8px; outline: none; border: 1px solid dimgray;" type="text" name="handle">
+            <button style="padding: 4px 15px;">Submit</button>
+        </form>
+    </div>
+
+{% endblock %}

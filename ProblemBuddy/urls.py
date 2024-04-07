@@ -16,7 +16,10 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-
+from Recommender import views as vr
+from Dataset import views as vd
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('',vr.Home,name='home'),
+    path('input_handle',vd.Train,name='train'),
 ]
