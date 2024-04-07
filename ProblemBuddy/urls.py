@@ -21,5 +21,7 @@ from Dataset import views as vd
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('',vr.Home,name='home'),
-    path('input_handle',vd.Train,name='train'),
+    path('input_handle/',vd.Train,name='train'),
+    path('login/',vr.LogIn,name='login'),
+    path('register/',vr.Register,name='register'),
 ]

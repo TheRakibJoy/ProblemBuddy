@@ -11,7 +11,9 @@
             <button style="padding: 4px 15px;">Submit</button>
         </form>
        {% for message in messages %}
+       <div class="alert alert-primary" role="alert">
             <p id="messages">{{message}}</p>
+       </div>
        {% endfor%}
     </div>
 
