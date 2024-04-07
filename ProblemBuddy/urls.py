@@ -25,4 +25,5 @@ urlpatterns = [
     path('login/',vr.LogIn,name='login'),
     path('logout/',vr.LogOut,name='logout'),
     path('register/',vr.Register,name='register'),
+    path('recommender/',vr.Recommend,name='recommend'),
 ]
