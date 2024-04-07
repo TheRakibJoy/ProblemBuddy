@@ -4,6 +4,8 @@ from django.http import HttpResponse
 # Create your views here.
 from django.contrib import messages
 from .add_data import Data_Entry
+from  django.contrib.auth.decorators import login_required
+@login_required(login_url='login')
 def Train(request):
     if request.method == 'POST':
         handle = request.POST.get('handle')
