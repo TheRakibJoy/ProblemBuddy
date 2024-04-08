@@ -2,17 +2,17 @@ from django.http import HttpResponse
 from django.shortcuts import render,redirect
 from django.contrib.auth import authenticate,login,logout
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import Group
 from .forms import CreateUserForm
 from django.contrib import messages
+from .decorotars import unauthenticated_user,allowed_user
 # Create your views here.
 @login_required(login_url='login')
 def Home(request):
    return render(request,'home.html')
 
+@unauthenticated_user
 def LogIn(request):
-   if request.user.is_authenticated:
-      return redirect('home')
-   else:
       if request.method=='POST':
          username = request.POST.get('username')
          password = request.POST.get('password')
@@ -31,16 +31,16 @@ def LogOut(request):
    logout(request)
    return redirect('login')
 
+@unauthenticated_user
 def Register(request):
-   if request.user.is_authenticated:
-      return redirect('home')
-   else:
       form = CreateUserForm()
       if request.method=='POST':
          form=CreateUserForm(request.POST)
          if form.is_valid():
-            form.save()
+            user = form.save()
             handle = form.cleaned_data.get('username')
+            group = Group.objects.get(name='contestant')
+            user.groups.add(group)
             messages.success(request,'Account was created for user '+handle)
 
             return redirect('login')

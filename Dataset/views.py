@@ -5,7 +5,9 @@ from django.http import HttpResponse
 from django.contrib import messages
 from .add_data import Data_Entry
 from  django.contrib.auth.decorators import login_required
+from Recommender.decorotars import allowed_user
 @login_required(login_url='login')
+@allowed_user(['admin'])
 def Train(request):
     if request.method == 'POST':
         handle = request.POST.get('handle')
