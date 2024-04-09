@@ -49,6 +49,39 @@ def Register(request):
       return render(request, 'register.html', context)
 
 
+from .Target import get_lo_hi
+import pandas as pd
+from .problem_giver import give_me_problem
+from .weak_tags import get_weak_tags
+from Dataset.models import Handle,Pupil,Expert,Candidate_Master,Master,Specialist,Counter
+import random
 @login_required(login_url='login')
 def Recommend(request):
-   return HttpResponse(request.user)
+    handle = str(request.user)
+    (ase, target) = get_lo_hi(handle)
+    if ase == -1:
+        messages.error(request,"Something Went Wrong!")
+        redirect('recommend')
+    print(ase,target)
+
+    if target == 1200:
+        Table = Pupil
+    if target == 1400:
+        Table = Specialist
+    if target == 1600:
+        Table = Expert
+    if target == 1900:
+        Table = Candidate_Master
+    if target == 2100:
+        Table = Master
+
+    Table = pd.DataFrame.from_records(Table.objects.all().values())
+
+    weak_tags = get_weak_tags(handle)
+    res = give_me_problem(weak_tags,Table)
+    random_index = random.randint(0,len(res)-1)
+    pathabo = Table.iloc[res[random_index]]
+    s = pathabo.Tags
+    Tags = s.split(',')
+    context = {'i':pathabo,'Tags':Tags}
+    return render(request,'recommend.html',context)

@@ -1,0 +1,88 @@
+{% extends 'main.html' %}
+
+{% block header %}
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <style>
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+        .navbar {
+            background-color: #34495e;
+            color: #ecf0f1;
+            padding: 15px 0;
+            text-align: center;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            position: fixed;
+            top: 0;
+        }
+        .navbar-left {
+            display: flex;
+            align-items: center;
+        }
+        .navbar-icon {
+            font-size: 32px;
+            margin-right: 10px;
+        }
+        .navbar-name {
+            font-size: 24px;
+        }
+        /* Your existing styles */
+        .content {
+            margin-top: 80px;
+        }
+        .card {
+            border: 1px solid #ddd;
+            padding: 10px 20px;
+            margin: 10px;
+            width: 400px;
+            background-color: #f9f9f9;
+            box-shadow: 2px 4px 13px rgba(0,0,0,0.2);
+        }
+        .card-text {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .tag {
+            background: rgba(0,0,0,0.85);
+            padding: 8px;
+            color: white;
+            border-radius: 8px;
+            font-size: 10px;
+        }
+    </style>
+{% endblock %}
+
+
+{% block content%}
+
+    <div class="content">
+        <a href="/input">Back</a>
+        <div class="card">
+            <div class="card-text">
+                <h3>Problem: </h3>
+                <a href="https://codeforces.com/contest/{{i.PID}}/problem/{{i.Index}}" target="_blank">A Nice Problem For You!!</a>
+            </div>
+
+            <div class="card-text" style="align-items: start;">
+
+                <div style="display: flex; align-items: center; gap: 4px; flex-wrap: wrap">
+
+                    {% for tag in Tags%}
+                        <p class="tag">{{tag}}</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
