@@ -7,7 +7,7 @@ from .forms import CreateUserForm
 from django.contrib import messages
 from .decorotars import unauthenticated_user,allowed_user
 # Create your views here.
-@login_required(login_url='login')
+#@login_required(login_url='login')
 def Home(request):
    return render(request,'home.html')
 
