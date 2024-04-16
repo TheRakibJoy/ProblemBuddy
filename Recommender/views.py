@@ -85,3 +85,29 @@ def Recommend(request):
     Tags = s.split(',')
     context = {'i':pathabo,'Tags':Tags}
     return render(request,'recommend.html',context)
+
+import requests
+@login_required
+def Profile(request):
+    handle = str(request.user)
+    url = 'https://codeforces.com/api/user.info?handles='+handle
+    try:
+        response = requests.get(url)
+        x=response.json()
+
+    except:
+        print("Not found")  
+    info = {
+        'handle': '',
+        'maxRating': int(0) ,
+        'maxRank': '',
+        'photo': '',
+    }
+    x=x["result"]
+    x=x[0]
+    print(x)
+    info['handle']=handle
+    info['maxRating'] = int(x['maxRating'])
+    info['maxRank'] = x['maxRank']
+    info['photo'] = x['titlePhoto']
+    return render(request,'profile.html',info)
