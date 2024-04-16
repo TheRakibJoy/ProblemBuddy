@@ -1,7 +1,13 @@
 {% extends 'main.html' %}
 
-{% block content %}
 
-<p1>Welcome to ProblemBuddy</p1>
+{% block content %}
+<div  class="container text-center wc-note">
+    <h1>Welcome to <span>ProblemBuddy</span></h1>
+    <p>A personalized problem recommender. It recommends problems by
+        analyzing your track record and other succesfull people's track record
+    </p>
+    <a href="{% url 'recommend'%}">Get Problems</a>
+</div>
 
 {% endblock %}
