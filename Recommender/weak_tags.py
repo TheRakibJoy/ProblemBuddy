@@ -37,6 +37,7 @@ def get_weak_tags(handle):
                         map[tags[i]]+=1
                 tags = ', '.join(tags)
     nob = Counter.objects.filter(Tag_Name = 'users').last()
+    percentage =[]
     for ob in Counter.objects.all():
         if ob.Tag_Name== 'users':
             continue
@@ -55,6 +56,7 @@ def get_weak_tags(handle):
         if ob.Tag_Name in map:
             ase= map[ob.Tag_Name]
         if ase < dorkar:
+            percentage.append(round((dorkar-ase)*100/dorkar))
             weak_tags.append(str(ob.Tag_Name))
     weak_tags = ', '.join(weak_tags)
-    return weak_tags
+    return (weak_tags, percentage)

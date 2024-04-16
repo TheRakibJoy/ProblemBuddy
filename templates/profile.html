@@ -27,6 +27,22 @@
                                 <h6 class="text-muted">3454656</h6>
                             </div>
                         </div>
+                        <div class="row-md-12">
+                            <h3 class="mt-3 text-center">Your Weak Areas</h3>
+                            <hr class="badge-primary mt-0 w-25">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    {% for i in weak_list%}
+                                    <h3 class="progress-title">{{i.0}}</h3>
+                                    <div class="progress red">
+                                        <div class="progress-bar progress-bar-danger progress-bar-striped active" style="width:{{i.1}}%;">
+                                            <div class="progress-value">{{i.1}}%</div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

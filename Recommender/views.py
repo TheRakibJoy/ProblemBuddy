@@ -77,7 +77,7 @@ def Recommend(request):
 
     Table = pd.DataFrame.from_records(Table.objects.all().values())
 
-    weak_tags = get_weak_tags(handle)
+    (weak_tags,percentage) = get_weak_tags(handle)
     res = give_me_problem(weak_tags,Table)
     random_index = random.randint(0,len(res)-1)
     pathabo = Table.iloc[res[random_index]]
@@ -96,18 +96,27 @@ def Profile(request):
         x=response.json()
 
     except:
-        print("Not found")  
+        print("Not found") 
+    (weak_tags,percentage)=get_weak_tags(handle) 
     info = {
-        'handle': '',
-        'maxRating': int(0) ,
-        'maxRank': '',
-        'photo': '',
     }
     x=x["result"]
     x=x[0]
-    print(x)
     info['handle']=handle
     info['maxRating'] = int(x['maxRating'])
     info['maxRank'] = x['maxRank']
     info['photo'] = x['titlePhoto']
+    weak_list=[]
+    weak_tags=weak_tags.split(',')
+    for i in range(len(percentage)):
+        weak_list.append(list([weak_tags[i],percentage[i]]))
+    #sorting
+    for i in range(len(weak_list)):
+        for j in range(i+1,len(weak_list)):
+            if weak_list[j][1]>weak_list[i][1]:
+                tmp = weak_list[i]
+                weak_list[i]=weak_list[j]
+                weak_list[j]=tmp
+
+    info['weak_list']=weak_list
     return render(request,'profile.html',info)

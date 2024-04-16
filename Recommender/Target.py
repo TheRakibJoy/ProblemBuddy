@@ -1,7 +1,7 @@
 import requests
 import json
 def get_lo_hi(handle):
-    url = 'https://codeforces.com/api/user.rating?handle=' + handle
+    url = 'https://codeforces.com/api/user.info?handles=' + handle
     try:
         response = requests.get(url)
         x=response.json()
@@ -11,8 +11,8 @@ def get_lo_hi(handle):
         return (-1,-1)
     current=0
     for con in x['result']:
-        if con['newRating'] >= con['oldRating']:
-            current=max(current,con['newRating'])
+        if 'maxRating' in con:
+            current=int(con['maxRating'])
 
     target=0
     if current>=1900:
