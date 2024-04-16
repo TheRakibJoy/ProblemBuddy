@@ -30,10 +30,11 @@
      padding: 10px 20px;
      font-family: serif;
      font-size: 1em;
+     letter-spacing: .5px;
  }
  .wc-note a{
      text-decoration: none;
-     background-color: indianred;
+     background-color: rgb(196, 9, 9);
      color: white;
      padding: 10px 20px;
      letter-spacing: 5px;
