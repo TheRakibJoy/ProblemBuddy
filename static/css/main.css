@@ -39,6 +39,30 @@
      padding: 10px 20px;
      letter-spacing: 5px;
  }
+ .red-button{
+    text-align: center;
+    text-decoration: none;
+    color: white;
+    background-color: rgb(196, 9, 9);
+    padding: 10px 20px;
+    letter-spacing: 5px;
+ }
+ .green-button{
+    text-align: center;
+    text-decoration: none;
+    color: white;
+    background-color: #307470;
+    padding: 10px 20px;
+    letter-spacing: 5px;
+ }
+ .nav-button{
+    text-align: center;
+    text-decoration: none;
+    color: black;
+    background-color: #e3dee3;
+    letter-spacing: 2px;
+    margin: 0 3px;
+ }
 
  /*for progess bar */
  .progress-title{
