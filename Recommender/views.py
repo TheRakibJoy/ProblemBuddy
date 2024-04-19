@@ -78,19 +78,17 @@ def Recommend(request):
     Table = pd.DataFrame.from_records(Table.objects.all().values())
 
     (weak_tags,percentage) = get_weak_tags(handle)
-    res = give_me_problem(weak_tags,Table)
+    res = give_me_problem(handle, weak_tags,Table)
     context = {
         'problems':[]
     }
     for i in range(3):
         random_index = random.randint(0,len(res)-1)
         pathabo = Table.iloc[res[random_index]]
-        print(pathabo)
         s = pathabo.Tags
         Tags = s.split(',')
         map = {'i':pathabo,'Tags':Tags}
         context['problems'].append(map)
-    print(context)
     return render(request,'recommend.html',context)
 
 import requests
