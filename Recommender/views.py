@@ -60,8 +60,7 @@ def Recommend(request):
     handle = str(request.user)
     (ase, target) = get_lo_hi(handle)
     if ase == -1:
-        messages.error(request,"Something Went Wrong!")
-        redirect('recommend')
+        return HttpResponse("No Internet Connection or Codeforces is down!!!")
     print(ase,target)
 
     if target == 1200:
@@ -101,7 +100,8 @@ def Profile(request):
         x=response.json()
 
     except:
-        print("Not found") 
+        print("Not found")
+        return HttpResponse("No Internet Connection or Codeforces is down!!!")
     (weak_tags,percentage)=get_weak_tags(handle) 
     info = {
     }
