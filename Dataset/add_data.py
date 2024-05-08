@@ -68,6 +68,7 @@ def Data_Entry(handle, current , target):
                 index = sub['problem']['index']
                 rating = sub['problem']['rating']
                 tags = sub['problem']['tags']
+                tags.append(str(rating))
                 for i in range(len(tags)):
                     tags[i] = tags[i].replace(" ", "");
                     tags[i] = tags[i].replace("-", "");

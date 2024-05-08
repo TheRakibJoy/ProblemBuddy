@@ -28,6 +28,7 @@ def get_weak_tags(handle):
         if start <= sub['creationTimeSeconds'] and sub['verdict'] == 'OK':
             if 'rating' in sub['problem'] and sub['problem']['rating'] > current:
                 tags = sub['problem']['tags']
+                tags.append(str(sub['problem']['rating']))
                 for i in range(len(tags)):
                     tags[i] = tags[i].replace(" ", "");
                     tags[i] = tags[i].replace("-", "");
@@ -36,6 +37,7 @@ def get_weak_tags(handle):
                     else:
                         map[tags[i]]+=1
                 tags = ', '.join(tags)
+    print(map)
     nob = Counter.objects.filter(Tag_Name = 'users').last()
     percentage =[]
     for ob in Counter.objects.all():
