@@ -37,8 +37,8 @@ def get_weak_tags(handle):
                     else:
                         map[tags[i]]+=1
                 tags = ', '.join(tags)
-    print(map)
     nob = Counter.objects.filter(Tag_Name = 'users').last()
+    print(map)
     percentage =[]
     for ob in Counter.objects.all():
         if ob.Tag_Name== 'users':
