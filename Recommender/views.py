@@ -91,7 +91,7 @@ def Recommend(request):
     return render(request,'recommend.html',context)
 
 import requests
-@login_required
+@login_required(login_url='login')
 def Profile(request):
     handle = str(request.user)
     url = 'https://codeforces.com/api/user.info?handles='+handle
