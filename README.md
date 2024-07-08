@@ -18,7 +18,7 @@ Welcome to ProblemBuddy. Your personal problem recommendor.We recommend problems
 ## Introduction
 
 ”Problembuddy” is a web-based application tailored exclusively for Codeforces users who
-are competitive programmers. The system operates through three phases: Register, Weaknesses Analyzer and Recommendation. In the Registration Phase, users provide their Codeforces handles, allowing data retrieval from the Codeforces API. Users then input their handles to identify current skills, target rank, and weak areas. Using vectors and cosine similarity, the Recommendation Phase suggests problems that align with users abilities.
+are competitive programmers. The system operates through three phases: Register, Train and Recommendation. In the Registration Phase, users provide their Codeforces handles, allowing data retrieval from the Codeforces API. Users then input their handles to identify current skills, target rank, and weak areas. Using vectors and cosine similarity, the Recommendation Phase suggests problems that align with users abilities. The Train phase allows users to train the system with the data of their favorite coder's track record.
 
 ## Installation
 
