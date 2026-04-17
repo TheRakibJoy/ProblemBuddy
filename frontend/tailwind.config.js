@@ -2,6 +2,11 @@
 export default {
   content: ["./src/**/*.{ts,tsx}", "../templates/**/*.html"],
   darkMode: ['class', '[data-bs-theme="dark"]'],
+  corePlugins: {
+    // Tailwind's `.collapse` utility (visibility: collapse) conflicts with
+    // Bootstrap's `.collapse` class used for expandable navbar/accordion.
+    visibility: false,
+  },
   theme: {
     extend: {
       colors: {
