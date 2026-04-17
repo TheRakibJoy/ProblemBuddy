@@ -33,7 +33,7 @@ def _run_job(job_id: int) -> None:
     try:
         Handle.objects.get_or_create(handle=job.handle)
         prev_target = 0
-        for i, (_floor, target, tier, label) in enumerate(RATING_TIERS, start=1):
+        for i, (_floor, target, _tier, label) in enumerate(RATING_TIERS, start=1):
             job.current_tier = label
             job.done = i - 1
             job.save(update_fields=["current_tier", "done", "updated_at"])

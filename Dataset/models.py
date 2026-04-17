@@ -10,7 +10,7 @@ class Problem(models.Model):
     PID = models.IntegerField()
     Index = models.CharField(max_length=3)
     Rating = models.IntegerField(null=True, db_index=True)
-    Tags = models.CharField(max_length=600, null=True)
+    Tags = models.CharField(max_length=600, null=True)  # noqa: DJ001
 
     class Meta:
         constraints = [

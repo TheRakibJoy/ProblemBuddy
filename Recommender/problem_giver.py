@@ -1,8 +1,8 @@
 """Recommend unsolved problems from a tier using cosine similarity on tags."""
 
 import logging
+from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Iterable
 
 import numpy as np
 from django.core.cache import cache

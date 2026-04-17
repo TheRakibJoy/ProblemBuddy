@@ -3,7 +3,8 @@ from django.contrib.auth.views import PasswordChangeDoneView, PasswordChangeView
 from django.urls import path
 
 from Dataset import views as vd
-from Recommender import api, views as vr
+from Recommender import api
+from Recommender import views as vr
 
 urlpatterns = [
     path("admin/", admin.site.urls),

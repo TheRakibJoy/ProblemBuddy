@@ -1,5 +1,6 @@
 import pytest
 from django.contrib.auth.models import User
+from django.db import IntegrityError
 
 from Recommender.models import Profile
 
@@ -29,5 +30,5 @@ def test_cf_handle_unique():
     u1.profile.cf_handle = "tourist"
     u1.profile.save()
     u2.profile.cf_handle = "tourist"
-    with pytest.raises(Exception):
+    with pytest.raises(IntegrityError):
         u2.profile.save()

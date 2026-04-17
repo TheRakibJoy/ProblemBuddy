@@ -6,15 +6,15 @@ from functools import wraps
 
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.utils.timezone import now
-from django.views.decorators.http import require_GET, require_POST, require_http_methods
+from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
 from Dataset.codeforces import CodeforcesError, handle_exists, user_info
 from Dataset.constants import RATING_TIERS
 from Dataset.models import Problem
 
-from .Target import get_lo_hi
-from .models import Profile, ProblemInteraction, TrainingJob
+from .models import ProblemInteraction, Profile, TrainingJob
 from .problem_giver import recommend
+from .Target import get_lo_hi
 from .training import start_training_job
 from .weak_tags import get_weak_tags
 
@@ -141,7 +141,7 @@ def profile_summary_view(request: HttpRequest) -> JsonResponse:
     weak_tags_str, percentage = get_weak_tags(handle)
     weak_tags = [t.strip() for t in weak_tags_str.split(",") if t.strip()]
     weak_list = sorted(
-        ({"tag": t, "pct": p} for t, p in zip(weak_tags, percentage)),
+        ({"tag": t, "pct": p} for t, p in zip(weak_tags, percentage, strict=False)),
         key=lambda r: r["pct"],
         reverse=True,
     )
@@ -285,8 +285,9 @@ def train_active_view(request: HttpRequest) -> JsonResponse:
     """Latest active training job for the user, if any (or the most recent one
     within the last 5 minutes if it just completed so the UI can show the toast).
     """
-    from django.utils import timezone
     from datetime import timedelta
+
+    from django.utils import timezone
 
     job = TrainingJob.objects.filter(
         user=request.user, status__in=("queued", "running")

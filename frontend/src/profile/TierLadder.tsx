@@ -7,55 +7,61 @@ interface Props {
   maxRating: number;
 }
 
+function rankFor(tiers: TierDef[], rating: number): number {
+  if (!tiers.length) return -1;
+  let idx = 0;
+  for (let i = 0; i < tiers.length; i++) {
+    if (rating >= tiers[i].floor) idx = i;
+  }
+  return idx;
+}
+
 export function TierLadder({ tiers, currentFloor, nextTarget, maxRating }: Props) {
   if (!tiers.length) return null;
-  const min = tiers[0].floor;
-  const max = tiers[tiers.length - 1].target;
-  const span = max - min || 1;
-  const pct = (value: number) => `${Math.max(0, Math.min(100, ((value - min) / span) * 100))}%`;
+  const userRank = rankFor(tiers, maxRating || currentFloor);
+  const targetRank = tiers.findIndex((t) => t.target === nextTarget);
 
   return (
-    <div className="mb-4">
-      <h4 className="text-center mb-3">Tier ladder</h4>
-      <div className="position-relative" style={{ height: 80 }}>
-        <div
-          className="position-absolute top-50 start-0 end-0 translate-middle-y"
-          style={{ height: 4, background: "var(--bs-border-color)" }}
-        />
-        {tiers.map((t) => (
-          <div
-            key={t.key}
-            className="position-absolute top-50 translate-middle text-center"
-            style={{ left: pct(t.floor) }}
-          >
-            <div
-              className="rounded-circle bg-primary"
-              style={{ width: 10, height: 10, margin: "0 auto" }}
-              aria-hidden
-            />
-            <small className="d-block mt-1 text-muted" style={{ fontSize: "0.7em" }}>
-              {t.label}
-              <br />
-              {t.floor}
-            </small>
-          </div>
-        ))}
-        <div
-          className="position-absolute top-50 translate-middle"
-          style={{ left: pct(maxRating || currentFloor) }}
-          aria-label={`You are at rating ${maxRating || currentFloor}`}
-        >
-          <div
-            style={{ fontSize: 28, lineHeight: 1, transform: "translateY(-60%)" }}
-            aria-hidden
-          >
-            📍
-          </div>
-        </div>
-      </div>
-      <p className="text-muted text-center mt-3">
-        Next milestone: <strong>{nextTarget}</strong>
+    <section className="mb-4" aria-label="Tier ladder">
+      <h4 className="text-center mb-1">Tier ladder</h4>
+      <p className="text-muted text-center small mb-3">
+        Max rating <strong>{maxRating || "—"}</strong> — next milestone{" "}
+        <strong>{nextTarget}</strong>
       </p>
-    </div>
+
+      <div className="d-flex align-items-stretch overflow-auto gap-2 pb-2">
+        {tiers.map((tier, i) => {
+          const isCurrent = i === userRank;
+          const isTarget = i === targetRank;
+          const isPast = i < userRank;
+          const baseClasses =
+            "flex-shrink-0 text-center px-3 py-2 rounded border";
+          const stateClasses = isCurrent
+            ? "bg-primary text-white border-primary"
+            : isTarget
+              ? "bg-warning-subtle border-warning text-warning-emphasis"
+              : isPast
+                ? "bg-success-subtle border-success text-success-emphasis"
+                : "bg-body-tertiary border-secondary-subtle text-muted";
+          return (
+            <div
+              key={tier.key}
+              className={`${baseClasses} ${stateClasses}`}
+              style={{ minWidth: 120 }}
+              aria-current={isCurrent ? "step" : undefined}
+              title={`${tier.label}: ${tier.floor}–${tier.target - 1}`}
+            >
+              <div className="small fw-semibold text-truncate">{tier.label}</div>
+              <div className="small opacity-75">
+                {tier.floor}–{tier.target - 1}
+              </div>
+              {isCurrent && <div className="mt-1">📍 You</div>}
+              {isTarget && !isCurrent && <div className="mt-1">🎯 Goal</div>}
+              {isPast && <div className="mt-1">✓</div>}
+            </div>
+          );
+        })}
+      </div>
+    </section>
   );
 }

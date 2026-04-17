@@ -85,6 +85,6 @@ def ingest_handle(handle: str, current: int, target: int) -> int:
 
 def ingest_all_tiers(handle: str) -> None:
     prev_target = 0
-    for floor, target, _tier, _label in RATING_TIERS:
+    for _floor, target, _tier, _label in RATING_TIERS:
         ingest_handle(handle, prev_target, target)
         prev_target = target

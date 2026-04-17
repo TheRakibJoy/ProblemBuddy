@@ -18,20 +18,23 @@ class Profile(models.Model):
         on_delete=models.CASCADE,
         related_name="profile",
     )
-    cf_handle = models.CharField(max_length=100, unique=True, null=True, blank=True)
+    cf_handle = models.CharField(max_length=100, unique=True, null=True, blank=True)  # noqa: DJ001
     theme_preference = models.CharField(
         max_length=8, choices=THEME_CHOICES, default="system"
     )
     difficulty_offset = models.IntegerField(default=0)
     recommendations_per_load = models.PositiveSmallIntegerField(default=3)
 
+    class Meta:
+        ordering = ["user_id"]
+
+    def __str__(self) -> str:
+        return f"Profile<{self.user_id}>"
+
     def save(self, *args, **kwargs):
         self.difficulty_offset = max(-300, min(300, self.difficulty_offset))
         self.recommendations_per_load = max(1, min(12, self.recommendations_per_load))
         super().save(*args, **kwargs)
-
-    def __str__(self) -> str:
-        return f"Profile<{self.user_id}>"
 
 
 TRAINING_STATUS_CHOICES = [

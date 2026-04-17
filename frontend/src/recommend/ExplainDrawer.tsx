@@ -27,7 +27,7 @@ export function ExplainDrawer({ problem, weakTags, onClose }: Props) {
         </p>
         <h6 className="mt-3">Matching weak tags</h6>
         {relevant.length === 0 ? (
-          <p className="text-muted small">None of your flagged weak tags match — it's a broad-fit pick.</p>
+          <p className="text-muted small">None of your flagged weak tags match &mdash; it&apos;s a broad-fit pick.</p>
         ) : (
           <ul className="list-unstyled">
             {relevant.map((w) => (

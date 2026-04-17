@@ -13,7 +13,7 @@ def train_handle(self, handle: str) -> dict:
     prev_target = 0
     total = len(RATING_TIERS)
     added_total = 0
-    for i, (floor, target, tier, label) in enumerate(RATING_TIERS, start=1):
+    for i, (_floor, target, tier, label) in enumerate(RATING_TIERS, start=1):
         self.update_state(
             state="PROGRESS",
             meta={"tier": tier, "label": label, "done": i - 1, "total": total},

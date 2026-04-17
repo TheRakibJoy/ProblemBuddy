@@ -86,7 +86,7 @@ export function RecommendPage({ initial_count = 3 }: BootProps) {
 
       {query.isError && (
         <div className="alert alert-warning">
-          Couldn't load recommendations right now. Try again in a moment.
+          Couldn&apos;t load recommendations right now. Try again in a moment.
         </div>
       )}
 

@@ -41,7 +41,7 @@ export function TrainingWatcher() {
     if (job && job.status !== "success" && job.status !== "failed") {
       setDismissed(false);
     }
-  }, [job?.id, job?.status]);
+  }, [job]);
 
   if (!job || dismissed) return null;
 

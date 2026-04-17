@@ -1,5 +1,6 @@
-import pytest
 from unittest.mock import patch
+
+import pytest
 
 from Dataset.constants import COUNTER_TOTAL_TAG, TIER_PUPIL
 from Dataset.models import Counter
