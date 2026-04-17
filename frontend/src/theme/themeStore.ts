@@ -10,7 +10,10 @@ interface ThemeState {
   _applyEffective: () => void;
 }
 
-const mediaQuery = typeof window !== "undefined" ? window.matchMedia("(prefers-color-scheme: dark)") : null;
+const mediaQuery =
+  typeof window !== "undefined" && typeof window.matchMedia === "function"
+    ? window.matchMedia("(prefers-color-scheme: dark)")
+    : null;
 
 function computeEffective(pref: Theme): "light" | "dark" {
   if (pref === "system") return mediaQuery?.matches ? "dark" : "light";
