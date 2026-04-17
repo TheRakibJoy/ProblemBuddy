@@ -1,3 +1,4 @@
+{% with url_name=request.resolver_match.url_name %}
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
   <div class="container-fluid">
     <a class="navbar-brand" href="{% url 'home' %}">ProblemBuddy</a>
@@ -6,18 +7,38 @@
     </button>
     <div class="collapse navbar-collapse" id="navbarNav">
       <ul class="navbar-nav me-auto">
-        <li class="nav-item"><a class="nav-link" href="{% url 'home' %}">Home</a></li>
-        <li class="nav-item"><a class="nav-link" href="{% url 'recommend' %}">Recommender</a></li>
-        <li class="nav-item"><a class="nav-link" href="{% url 'train' %}">Train</a></li>
-        <li class="nav-item"><a class="nav-link" href="{% url 'profile' %}">Weakness Analyzer</a></li>
+        <li class="nav-item">
+          <a class="nav-link{% if url_name == 'home' %} active{% endif %}" href="{% url 'home' %}"{% if url_name == 'home' %} aria-current="page"{% endif %}>Home</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link{% if url_name == 'recommend' %} active{% endif %}" href="{% url 'recommend' %}"{% if url_name == 'recommend' %} aria-current="page"{% endif %}>Recommender</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link{% if url_name == 'train' %} active{% endif %}" href="{% url 'train' %}"{% if url_name == 'train' %} aria-current="page"{% endif %}>Train</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link{% if url_name == 'profile' %} active{% endif %}" href="{% url 'profile' %}"{% if url_name == 'profile' %} aria-current="page"{% endif %}>Weakness Analyzer</a>
+        </li>
       </ul>
-      <div class="d-flex align-items-center">
+      <div class="d-flex align-items-center gap-2">
+        <div data-react-island="theme-toggle"></div>
         {% if request.user.is_authenticated %}
-          <a href="{% url 'profile' %}" class="btn btn-outline-light me-2">Hello, {{ request.user }}</a>
-          <form method="post" action="{% url 'logout' %}" class="d-inline">
-            {% csrf_token %}
-            <button type="submit" class="btn btn-outline-light">Logout</button>
-          </form>
+          <div class="dropdown">
+            <button class="btn btn-outline-light dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+              {{ request.user }}
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+              <li><a class="dropdown-item" href="{% url 'profile' %}">Profile</a></li>
+              <li><a class="dropdown-item" href="{% url 'settings' %}">Settings</a></li>
+              <li><hr class="dropdown-divider"></li>
+              <li>
+                <form method="post" action="{% url 'logout' %}" class="m-0">
+                  {% csrf_token %}
+                  <button type="submit" class="dropdown-item">Logout</button>
+                </form>
+              </li>
+            </ul>
+          </div>
         {% else %}
           <a href="{% url 'login' %}" class="btn btn-outline-light">Login</a>
         {% endif %}
@@ -25,3 +46,4 @@
     </div>
   </div>
 </nav>
+{% endwith %}

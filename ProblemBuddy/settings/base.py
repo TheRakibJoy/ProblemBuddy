@@ -26,10 +26,21 @@ INSTALLED_APPS = [
     "Recommender",
     "crispy_forms",
     "crispy_bootstrap5",
+    "django_vite",
 ]
 
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 CRISPY_TEMPLATE_PACK = "bootstrap5"
+
+DJANGO_VITE = {
+    "default": {
+        "dev_mode": DEBUG,
+        "dev_server_host": "127.0.0.1",
+        "dev_server_port": 5173,
+        "static_url_prefix": "",
+        "manifest_path": BASE_DIR / "frontend" / "dist" / "manifest.json",
+    }
+}
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -54,6 +65,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "Recommender.context_processors.theme_context",
             ],
         },
     },
@@ -107,6 +119,9 @@ USE_TZ = True
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_DIRS = [BASE_DIR / "static"]
+_VITE_DIST = BASE_DIR / "frontend" / "dist"
+if _VITE_DIST.exists():
+    STATICFILES_DIRS.append(_VITE_DIST)
 
 MEDIA_URL = "/images/"
 MEDIA_ROOT = BASE_DIR / "media"

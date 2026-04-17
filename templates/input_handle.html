@@ -1,22 +1,5 @@
 {% extends 'main.html' %}
 
 {% block content %}
-<div class="row justify-content-center">
-  <div class="col-md-6">
-    <div class="card shadow-sm">
-      <div class="card-body">
-        <h4 class="card-title text-center">Train with an inspiring handle</h4>
-        <p class="text-muted text-center">Ingest the solved problems of a strong Codeforces user to enrich the recommender.</p>
-        <form method="post">
-          {% csrf_token %}
-          <div class="mb-3">
-            <label for="id_handle" class="form-label">Codeforces handle</label>
-            <input id="id_handle" type="text" name="handle" class="form-control" required>
-          </div>
-          <button type="submit" class="btn btn-primary w-100">Submit</button>
-        </form>
-      </div>
-    </div>
-  </div>
-</div>
+<div data-react-island="train"></div>
 {% endblock %}

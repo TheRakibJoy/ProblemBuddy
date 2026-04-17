@@ -1,46 +1,5 @@
 {% extends 'main.html' %}
 
 {% block content %}
-<div class="row justify-content-center">
-  <div class="col-md-10">
-    <div class="card shadow-sm">
-      <div class="row g-0">
-        <div class="col-md-4 bg-info text-white text-center p-4 rounded-start">
-          {% if photo %}
-            <img src="{{ photo }}" alt="{{ handle }}" class="rounded-circle img-fluid" style="max-width: 150px;">
-          {% endif %}
-          <h2 class="mt-3">{{ handle }}</h2>
-          <p class="mb-0">{{ maxRank|default:"unrated" }}</p>
-        </div>
-        <div class="col-md-8 p-4">
-          <h3 class="text-center">Information</h3>
-          <hr class="w-25 mx-auto">
-          <div class="row mb-3">
-            <div class="col-md-6">
-              <p class="fw-bold mb-1">Email</p>
-              <p class="text-muted">{{ request.user.email|default:"—" }}</p>
-            </div>
-            <div class="col-md-6">
-              <p class="fw-bold mb-1">Max Rating</p>
-              <p class="text-muted">{{ maxRating|default:"—" }}</p>
-            </div>
-          </div>
-
-          <h3 class="text-center">Your weak areas</h3>
-          <hr class="w-25 mx-auto">
-          {% if weak_list %}
-            {% for tag, pct in weak_list %}
-              <p class="mb-1"><strong>{{ tag }}</strong></p>
-              <div class="progress mb-3" role="progressbar" aria-valuenow="{{ pct }}" aria-valuemin="0" aria-valuemax="100">
-                <div class="progress-bar bg-danger progress-bar-striped" style="width: {{ pct }}%;">{{ pct }}%</div>
-              </div>
-            {% endfor %}
-          {% else %}
-            <p class="text-muted text-center">No weak areas detected yet — solve a few more problems and check back.</p>
-          {% endif %}
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
+<div data-react-island="profile"></div>
 {% endblock %}

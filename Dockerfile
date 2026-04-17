@@ -1,3 +1,10 @@
+FROM node:20-alpine AS frontend
+WORKDIR /frontend
+COPY frontend/package.json frontend/package-lock.json* ./
+RUN npm ci || npm install
+COPY frontend/ ./
+RUN npm run build
+
 FROM python:3.12-slim AS base
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -14,6 +21,7 @@ COPY requirements.txt ./
 RUN pip install --upgrade pip && pip install -r requirements.txt
 
 COPY . .
+COPY --from=frontend /frontend/dist ./frontend/dist
 
 RUN addgroup --system app && adduser --system --ingroup app app \
  && chown -R app:app /app

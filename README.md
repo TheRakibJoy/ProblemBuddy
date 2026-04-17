@@ -57,22 +57,30 @@ managed via signal handlers in
 
 ## Quick start (local)
 
-Requires Python 3.11+.
+Requires Python 3.11+ and Node 20+.
 
 ```bash
 git clone https://github.com/TheRakibJoy/ProblemBuddy.git
 cd ProblemBuddy
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements-dev.txt
-cp .env.example .env                       # then fill in DJANGO_SECRET_KEY
+cp .env.example .env                       # fill in DJANGO_SECRET_KEY
 
 python manage.py migrate
 python manage.py create_default_groups     # creates `contestant` and `admin` groups
 python manage.py createsuperuser           # optional: admin/ access
+
+# Backend
 python manage.py runserver
+
+# Frontend (separate terminal — enables React island HMR on :5173)
+cd frontend && npm install && npm run dev
 ```
 
-Visit <http://localhost:8000>.
+Visit <http://localhost:8000>. The React islands mount automatically on every page
+that ships a `data-react-island` div. For production, run `npm run build` once —
+`django-vite` reads the emitted `frontend/dist/manifest.json` and serves hashed
+assets via `collectstatic`.
 
 Seed recommender data by logging in as an admin-group user and submitting a
 strong Codeforces handle (e.g. `tourist`) via `/input_handle/`, or call:

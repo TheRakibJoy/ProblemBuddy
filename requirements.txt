@@ -10,5 +10,6 @@ redis==5.0.7
 celery==5.4.0
 django-crispy-forms==2.3
 crispy-bootstrap5==2024.2
+django-vite==3.0.4
 gunicorn==22.0.0
 whitenoise==6.7.0

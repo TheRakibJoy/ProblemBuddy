@@ -1,45 +1,7 @@
 {% extends 'main.html' %}
-{% load static %}
 
 {% block content %}
-<section class="text-center mb-4">
-    <h3>Solve these problems and improve!</h3>
-    <hr class="w-25 mx-auto">
-</section>
-
-{% if problems %}
-<div class="row g-3">
-  {% for x in problems %}
-    <div class="col-md-4">
-      <div class="card h-100 shadow-sm">
-        <div class="card-body">
-          <h5 class="card-title">
-            Codeforces
-            <span class="badge bg-primary">{{ x.i.PID }}{{ x.i.Index }}</span>
-          </h5>
-          <h6 class="card-subtitle mb-2">
-            Rating <span class="badge bg-danger">{{ x.i.Rating }}</span>
-          </h6>
-          <div class="mb-3">
-            {% for tag in x.Tags %}
-              <span class="badge bg-secondary">{{ tag }}</span>
-            {% endfor %}
-          </div>
-          <a href="https://codeforces.com/contest/{{ x.i.PID }}/problem/{{ x.i.Index }}"
-             target="_blank" rel="noopener"
-             class="btn btn-primary w-100">Solve this</a>
-        </div>
-      </div>
-    </div>
-  {% endfor %}
+<div data-react-island="recommend"
+     data-props='{"initial_count": {{ request.user.profile.recommendations_per_load|default:3 }}}'>
 </div>
-<div class="text-center mt-4">
-  <a href="{% url 'recommend' %}" class="btn btn-outline-primary">Get more problems</a>
-</div>
-{% else %}
-<div class="alert alert-warning text-center">
-  <p class="mb-2"><strong>No recommendations yet.</strong></p>
-  <p class="mb-0">Make sure your Codeforces handle matches your username and try again shortly.</p>
-</div>
-{% endif %}
 {% endblock %}
