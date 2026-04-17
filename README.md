@@ -308,4 +308,4 @@ ProblemBuddy/
 
 ## Contact
 
-Questions: `rakib@inverseai.com`.
+Questions: `rakibhjoy@gmail.com`.
