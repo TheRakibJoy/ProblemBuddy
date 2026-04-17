@@ -2,9 +2,9 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { resolve } from "path";
 
-export default defineConfig({
+export default defineConfig(({ command }) => ({
   plugins: [react()],
-  base: "/static/",
+  base: command === "build" ? "/static/" : "/",
   build: {
     manifest: "manifest.json",
     outDir: "dist",
@@ -28,4 +28,4 @@ export default defineConfig({
     setupFiles: ["./src/test-setup.ts"],
     css: false,
   },
-});
+}));
