@@ -1,10 +1,14 @@
-@tailwind base;
+/* Custom styles that complement Bootstrap 5. Tailwind's Preflight is disabled
+ * because it resets Bootstrap's navbar/link/button defaults. */
 @tailwind components;
 @tailwind utilities;
 
 @layer components {
   .skeleton {
-    @apply relative overflow-hidden rounded bg-gray-200 dark:bg-gray-700;
+    position: relative;
+    overflow: hidden;
+    border-radius: 0.25rem;
+    background-color: #e9ecef;
     background-image: linear-gradient(
       90deg,
       rgba(255, 255, 255, 0) 0%,
@@ -16,6 +20,7 @@
     animation: shimmer 1.2s ease-in-out infinite;
   }
   [data-bs-theme="dark"] .skeleton {
+    background-color: #343a40;
     background-image: linear-gradient(
       90deg,
       rgba(0, 0, 0, 0) 0%,
@@ -23,7 +28,8 @@
       rgba(0, 0, 0, 0) 100%
     );
   }
-  .focus-ring:focus-visible {
-    @apply outline-none ring-2 ring-accent ring-offset-2 ring-offset-white dark:ring-offset-gray-900;
+  @keyframes shimmer {
+    0% { background-position: -400px 0; }
+    100% { background-position: 400px 0; }
   }
 }

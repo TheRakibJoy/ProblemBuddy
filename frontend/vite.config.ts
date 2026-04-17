@@ -1,10 +1,10 @@
 import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";
+import react from "@vitejs/plugin-react-swc";
 import { resolve } from "path";
 
-export default defineConfig(({ command }) => ({
+export default defineConfig(() => ({
   plugins: [react()],
-  base: command === "build" ? "/static/" : "/",
+  base: "/static/",
   build: {
     manifest: "manifest.json",
     outDir: "dist",

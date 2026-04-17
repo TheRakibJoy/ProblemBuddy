@@ -18,9 +18,15 @@ function readBootData(): BootData {
   }
 }
 
-const boot = readBootData();
-initTheme({
-  preference: boot.authed ? boot.theme_preference : readLocal(),
-  authed: boot.authed,
-});
-mountIslands();
+try {
+  console.info("[ProblemBuddy] main.tsx loaded");
+  const boot = readBootData();
+  initTheme({
+    preference: boot.authed ? boot.theme_preference : readLocal(),
+    authed: boot.authed,
+  });
+  mountIslands();
+  console.info("[ProblemBuddy] islands mounted");
+} catch (err) {
+  console.error("[ProblemBuddy] bootstrap failed", err);
+}
