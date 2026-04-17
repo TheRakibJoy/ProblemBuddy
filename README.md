@@ -1,66 +1,149 @@
 # ProblemBuddy
 
-![Build Status](https://img.shields.io/badge/build-passing-brightgreen)
-![Version](https://img.shields.io/badge/version-1.0-blue)
+![Build](https://img.shields.io/badge/build-passing-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
-Welcome to ProblemBuddy. Your personal problem recommendor.We recommend problems by analyzing your track record and other succesfull people's track record.
-## Table of Contents
+ProblemBuddy is a web application for competitive programmers on
+[Codeforces](https://codeforces.com). It compares a user's solved-problem record
+against reference data from successful contestants, identifies weak tags, and
+recommends unsolved problems that target those gaps.
 
-- [Introduction](#introduction)
-- [Installation](#installation)
-- [Usage](#usage)
-- [Features](#features)
+## Table of contents
+
+- [Architecture](#architecture)
+- [Quick start (local)](#quick-start-local)
+- [Quick start (Docker)](#quick-start-docker)
+- [Environment variables](#environment-variables)
+- [Testing & linting](#testing--linting)
+- [Project layout](#project-layout)
 - [Contributing](#contributing)
 - [License](#license)
-- [Contact](#contact)
 
-## Introduction
+## Architecture
 
-”Problembuddy” is a web-based application tailored exclusively for Codeforces users who
-are competitive programmers. The system operates through three phases: Register, Train and Recommendation. In the Registration Phase, users provide their Codeforces handles, allowing data retrieval from the Codeforces API. Users then input their handles to identify current skills, target rank, and weak areas. Using vectors and cosine similarity, the Recommendation Phase suggests problems that align with users abilities. The Train phase allows users to train the system with the data of their favorite coder's track record.
+```mermaid
+flowchart LR
+    User[User]
+    Web[Django web]
+    Cache[(Redis cache)]
+    DB[(Postgres / SQLite)]
+    Worker[Celery worker]
+    CF[Codeforces API]
 
-## Installation
+    User --> Web
+    Web <--> Cache
+    Web <--> DB
+    Web -->|enqueue ingest| Worker
+    Worker --> CF
+    Worker --> DB
+    Web -->|cached reads| CF
+```
 
-To set up Competitive Programming Progress Tracker locally, follow these steps:
+Two Django apps:
 
-1. Clone the repository: `git clone https://github.com/Mehedi-10/Competitive-Programming-Progress-Tracker.git`
-2. Navigate to the project directory: `cd Competitive-Programming-Progress-Tracker`
-3. Create a virtual environment: `python3 -m venv venv`
-4. Activate the virtual environment:
-   - On macOS and Linux: `source venv/bin/activate`
-   - On Windows: `venv\Scripts\activate`
-5. Install dependencies: `pip install -r requirements.txt`
-6. Apply migrations: `python manage.py migrate`
-7. Create a superuser account: `python manage.py createsuperuser`
-8. Start the development server: `python manage.py runserver`
+- **Dataset** — stores `Problem` (Codeforces problems tagged by rating tier)
+  and `Counter` (per-tier tag frequencies used as a reference). Wraps the
+  Codeforces HTTP API in [`Dataset/codeforces.py`](Dataset/codeforces.py) with
+  caching and specific error handling.
+- **Recommender** — exposes `Home`, `Login`, `Register`, `Recommend`, `Profile`
+  views. Uses [`Recommender/problem_giver.py`](Recommender/problem_giver.py)
+  (cached `CountVectorizer` + cosine similarity) to rank unsolved problems
+  against a user's weak tags.
 
-## Usage
+Rating tiers are centralised in
+[`Dataset/constants.py`](Dataset/constants.py) and invalidated caches are
+managed via signal handlers in
+[`Dataset/signals.py`](Dataset/signals.py).
 
-After starting the development server, open your web browser and go to `http://localhost:8000`. You can create an account, log in, and begin tracking your daily programming activities. The user-friendly interface lets you visualize your progress over time and receive personalized feedback from experienced coaches.
+## Quick start (local)
 
-## Features
+Requires Python 3.11+.
 
-- Get problems
-- Know your weak points
-- Train data
+```bash
+git clone https://github.com/TheRakibJoy/ProblemBuddy.git
+cd ProblemBuddy
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements-dev.txt
+cp .env.example .env                       # then fill in DJANGO_SECRET_KEY
+
+python manage.py migrate
+python manage.py create_default_groups     # creates `contestant` and `admin` groups
+python manage.py createsuperuser           # optional: admin/ access
+python manage.py runserver
+```
+
+Visit <http://localhost:8000>.
+
+Seed recommender data by logging in as an admin-group user and submitting a
+strong Codeforces handle (e.g. `tourist`) via `/input_handle/`, or call:
+
+```bash
+python manage.py shell -c "from Dataset.add_data import ingest_all_tiers; ingest_all_tiers('tourist')"
+```
+
+## Quick start (Docker)
+
+```bash
+cp .env.example .env
+docker compose up --build
+```
+
+Spins up Postgres + Redis + Django (gunicorn) + Celery worker on
+<http://localhost:8000>.
+
+## Environment variables
+
+| Variable | Required | Default | Purpose |
+| --- | --- | --- | --- |
+| `DJANGO_SETTINGS_MODULE` | yes | `ProblemBuddy.settings.dev` | Selects dev or prod settings module |
+| `DJANGO_SECRET_KEY` | yes | — | Django signing key. Rotate if leaked. |
+| `DJANGO_DEBUG` | no | `False` | Must be `False` in prod |
+| `DJANGO_ALLOWED_HOSTS` | prod | `` | Comma-separated hostnames |
+| `DATABASE_URL` | no | SQLite | `postgres://user:pw@host:5432/db` |
+| `REDIS_URL` | no | LocMem | `redis://host:6379/1` |
+| `CELERY_BROKER_URL` | no | `REDIS_URL` | Celery broker |
+| `DJANGO_SECURE_SSL_REDIRECT` | no | `True` (prod) | HTTPS redirect |
+
+See [`.env.example`](.env.example) for a copy-paste starter.
+
+## Testing & linting
+
+```bash
+make test       # pytest + coverage
+make lint       # ruff + bandit
+```
+
+CI runs the same checks on every PR via
+[`.github/workflows/ci.yml`](.github/workflows/ci.yml) across Python 3.11 and
+3.12.
+
+## Project layout
+
+```
+ProblemBuddy/
+├── Dataset/            # Problem + Counter models, Codeforces client, ingest
+├── Recommender/        # Auth views, recommendation engine, management commands
+├── ProblemBuddy/       # Project + settings package (base/dev/prod) + celery.py
+├── templates/          # Bootstrap 5 templates
+├── static/             # CSS, images
+├── tests/              # pytest suite (target, codeforces, problem_giver, views)
+├── Dockerfile
+├── docker-compose.yml
+├── Makefile
+└── requirements*.txt
+```
 
 ## Contributing
 
-Contributions to Competitive Programming Progress Tracker are welcomed! To contribute:
-
-1. Fork the repository
-2. Create a new branch: `git checkout -b feature/your-feature`
-3. Commit your changes: `git commit -m "Add your feature"`
-4. Push to the branch: `git push origin feature/your-feature`
-5. Open a pull request
-
-For significant changes, please open an issue first to discuss the proposed changes.
+1. Fork the repo
+2. `git checkout -b feature/your-feature`
+3. Make changes, run `make lint test`
+4. Push and open a PR
 
 ## License
 
-This project is licensed under the [MIT License](LICENSE).
+[MIT](LICENSE).
 
 ## Contact
 
-Have questions or suggestions? Feel free to contact me at `rakibhjoy@gmail.com`.
+Questions: `rakib@inverseai.com`.

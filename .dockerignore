@@ -1,0 +1,17 @@
+.git
+.github
+.idea
+.vscode
+.venv
+venv
+__pycache__
+*.pyc
+db.sqlite3
+staticfiles/
+media/
+.env
+.env.*
+!.env.example
+.pytest_cache
+htmlcov
+coverage.xml

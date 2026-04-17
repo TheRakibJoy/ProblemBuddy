@@ -1,59 +1,86 @@
-def give_me_problem(handle,weak_tags,Table):
-    import pandas as pd
-    import numpy as np
+"""Recommend unsolved problems from a tier using cosine similarity on tags."""
 
-    from sklearn.feature_extraction.text import CountVectorizer
+import logging
+from dataclasses import dataclass
 
-    cv = CountVectorizer()
+import numpy as np
+from django.core.cache import cache
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
 
+from Dataset.codeforces import CodeforcesError, user_status
+from Dataset.models import Problem
 
-    vectors = cv.fit_transform(Table['Tags']).toarray()
+logger = logging.getLogger(__name__)
 
-    cv.get_feature_names_out()
-
-    from sklearn.metrics.pairwise import cosine_similarity
-
-    similarity = cosine_similarity(vectors)
-    import requests
-    import json
-    def isSolved(id, index):
-        url = 'https://codeforces.com/api/contest.standings?contestId=' + str(
-            id) + '&showUnofficial=true&handles=' + handle
-        try:
-            response = requests.get(url)
-            x = response.json()
-        except:
-            print("Failed to Get contest Data")
-            return False
-        idx = 0
-        x = x['result']
-        cnt = 0
-        for p in x['problems']:
-            if p['index'] == index:
-                idx = cnt
-                break
-            cnt = cnt + 1
-
-        for res in x['rows']:
-            if int(res['problemResults'][idx]['points']) > 0:
-                return True
-
-        return False
+VECTORIZER_TTL = 3600  # 1 hour; invalidated whenever Problem rows change.
 
 
-    def recommend(weak_tags):
-        weak_vector = cv.transform([weak_tags]).toarray()
-        similarity = cosine_similarity(weak_vector, vectors)
-        distance = similarity[0]
-        my_list = sorted(list(enumerate(distance)), reverse=True, key=lambda x: x[1])
-        problem_list = list()
-        for x in my_list:
-            problem = Table.iloc[x[0]]
-            if isSolved(problem.PID,problem.Index)==False:
-                problem_list.append(x[0])
-            if len(problem_list)>10:
-                break
-        return problem_list
+@dataclass
+class TierIndex:
+    problems: list[Problem]
+    vectorizer: CountVectorizer
+    vectors: np.ndarray
 
-    res = recommend(weak_tags)
-    return res
+
+def _build_tier_index(tier: str) -> TierIndex | None:
+    problems = list(Problem.objects.filter(tier=tier).order_by("id"))
+    if not problems:
+        return None
+    corpus = [p.Tags or "" for p in problems]
+    vectorizer = CountVectorizer()
+    vectors = vectorizer.fit_transform(corpus).toarray()
+    return TierIndex(problems=problems, vectorizer=vectorizer, vectors=vectors)
+
+
+def _tier_index(tier: str) -> TierIndex | None:
+    cache_key = f"tier-index:{tier}"
+    cached = cache.get(cache_key)
+    if cached is not None:
+        return cached
+    index = _build_tier_index(tier)
+    if index is not None:
+        cache.set(cache_key, index, VECTORIZER_TTL)
+    return index
+
+
+def invalidate_tier_index(tier: str) -> None:
+    cache.delete(f"tier-index:{tier}")
+
+
+def _solved_problem_keys(handle: str) -> set[tuple[int, str]]:
+    """Return the set of (contestId, index) the handle has solved (best-effort)."""
+    try:
+        submissions = user_status(handle)
+    except CodeforcesError:
+        return set()
+    solved: set[tuple[int, str]] = set()
+    for sub in submissions:
+        if sub.get("verdict") != "OK":
+            continue
+        problem = sub["problem"]
+        if "contestId" in problem:
+            solved.add((problem["contestId"], problem["index"]))
+    return solved
+
+
+def give_me_problem(handle: str, weak_tags: str, tier: str) -> list[int]:
+    """Return indexes into ``Problem.objects.filter(tier=tier).order_by('id')``."""
+    index = _tier_index(tier)
+    if index is None or not weak_tags:
+        return []
+
+    weak_vector = index.vectorizer.transform([weak_tags]).toarray()
+    similarity = cosine_similarity(weak_vector, index.vectors)[0]
+    ranked = np.argsort(-similarity)
+
+    solved = _solved_problem_keys(handle)
+    recommendations: list[int] = []
+    for i in ranked:
+        problem = index.problems[i]
+        if (problem.PID, problem.Index) in solved:
+            continue
+        recommendations.append(int(i))
+        if len(recommendations) >= 10:
+            break
+    return recommendations

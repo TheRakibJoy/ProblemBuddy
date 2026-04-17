@@ -1,0 +1,54 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: problembuddy
+      POSTGRES_USER: problembuddy
+      POSTGRES_PASSWORD: problembuddy
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  web:
+    build: .
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py create_default_groups &&
+             gunicorn ProblemBuddy.wsgi:application --bind 0.0.0.0:8000 --workers 3"
+    environment:
+      DJANGO_SETTINGS_MODULE: ProblemBuddy.settings.prod
+      DJANGO_SECRET_KEY: change-me
+      DJANGO_DEBUG: "False"
+      DJANGO_ALLOWED_HOSTS: "localhost,127.0.0.1"
+      DJANGO_SECURE_SSL_REDIRECT: "False"
+      DATABASE_URL: postgres://problembuddy:problembuddy@db:5432/problembuddy
+      REDIS_URL: redis://redis:6379/1
+      CELERY_BROKER_URL: redis://redis:6379/0
+    depends_on:
+      - db
+      - redis
+    ports:
+      - "8000:8000"
+
+  worker:
+    build: .
+    command: celery -A ProblemBuddy worker -l info
+    environment:
+      DJANGO_SETTINGS_MODULE: ProblemBuddy.settings.prod
+      DJANGO_SECRET_KEY: change-me
+      DJANGO_ALLOWED_HOSTS: "*"
+      DATABASE_URL: postgres://problembuddy:problembuddy@db:5432/problembuddy
+      REDIS_URL: redis://redis:6379/1
+      CELERY_BROKER_URL: redis://redis:6379/0
+    depends_on:
+      - db
+      - redis
+
+volumes:
+  pgdata:

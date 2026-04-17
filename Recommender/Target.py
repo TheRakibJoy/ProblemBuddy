@@ -1,33 +1,17 @@
-import requests
-import json
-def get_lo_hi(handle):
-    url = 'https://codeforces.com/api/user.info?handles=' + handle
-    try:
-        response = requests.get(url)
-        x=response.json()
+"""Map a Codeforces handle to its (current_floor, target_rating, tier) triple."""
 
-    except:
-        print("Not found")
-        return (-1,-1)
-    current=0
-    for con in x['result']:
-        if 'maxRating' in con:
-            current=int(con['maxRating'])
-    print("Current Max", current)
-    target=0
-    if current>=1900:
-        current=1900
-        target = 2100
-    elif current>=1600:
-        current=1600
-        target = 1900
-    elif current>=1400:
-        current=1400
-        target = 1600
-    elif current>=1200:
-        current = 1200
-        target = 1400
-    else:
-        current=0
-        target = 1200
-    return (current, target)
+from Dataset.codeforces import CodeforcesError, user_info
+from Dataset.constants import tier_for_max_rating
+
+
+def get_lo_hi(handle: str) -> tuple[int, int, str]:
+    """Return (current_floor, target_rating, tier_key).
+
+    Returns (-1, -1, "") if the handle cannot be resolved.
+    """
+    try:
+        info = user_info(handle)
+    except CodeforcesError:
+        return -1, -1, ""
+    max_rating = int(info.get("maxRating", 0))
+    return tier_for_max_rating(max_rating)

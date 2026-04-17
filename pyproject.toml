@@ -1,0 +1,21 @@
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+extend-exclude = ["migrations"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "DJ"]
+ignore = ["E501"]
+
+[tool.ruff.lint.per-file-ignores]
+"**/settings/*.py" = ["F401", "F403", "E402"]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "ProblemBuddy.settings.dev"
+python_files = ["test_*.py", "tests.py"]
+addopts = "--strict-markers -ra"
+filterwarnings = ["ignore::DeprecationWarning"]
+
+[tool.coverage.run]
+source = ["Dataset", "Recommender"]
+omit = ["*/migrations/*", "*/tests/*", "*/management/*"]

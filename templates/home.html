@@ -1,13 +1,12 @@
 {% extends 'main.html' %}
 
-
 {% block content %}
-<div  class="container text-center wc-note">
-    <h1>Welcome to <span>ProblemBuddy</span></h1>
-    <p>Your personal problem recommendor<br>We recommend problems by
-        analyzing your track record and other succesfull people's track record
-    </p>
-    <a href="{% url 'recommend'%}" class="btn btn-primary">Get Problems</a>
+<div class="text-center py-5">
+  <h1>Welcome to <span class="text-primary">ProblemBuddy</span></h1>
+  <p class="lead">
+    Your personal problem recommender — we analyze your track record against successful
+    competitive programmers to target your weak spots.
+  </p>
+  <a href="{% url 'recommend' %}" class="btn btn-primary btn-lg mt-3">Get problems</a>
 </div>
-
 {% endblock %}

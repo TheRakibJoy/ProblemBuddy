@@ -1,10 +1,20 @@
 from django.contrib import admin
-from .models import Pupil,Specialist,Expert,Candidate_Master,Master,Counter,Handle
-# Register your models here.
-admin.site.register(Specialist)
-admin.site.register(Expert)
-admin.site.register(Pupil)
-admin.site.register(Candidate_Master)
-admin.site.register(Master)
-admin.site.register(Counter)
+
+from .models import Counter, Handle, Problem
+
+
+@admin.register(Problem)
+class ProblemAdmin(admin.ModelAdmin):
+    list_display = ("tier", "PID", "Index", "Rating")
+    list_filter = ("tier",)
+    search_fields = ("PID", "Tags")
+
+
+@admin.register(Counter)
+class CounterAdmin(admin.ModelAdmin):
+    list_display = ("tag_name", "tier", "count")
+    list_filter = ("tier",)
+    search_fields = ("tag_name",)
+
+
 admin.site.register(Handle)

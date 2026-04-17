@@ -1,141 +1,90 @@
-import random
-from .models import Handle,Pupil,Expert,Candidate_Master,Master,Specialist,Counter
-import json
-import requests
+"""Ingest a reference handle's solved problems into Problem/Counter tables."""
 
-def Tag_Entry(ob,target):
-    if target == 1200:
-        ob.Pupil += 1
-        ob.save()
-    if target == 1400:
-        ob.Specialist += 1
-        ob.save()
-    if target == 1600:
-        ob.Expert += 1
-        ob.save()
-    if target == 1900:
-        ob.Candidate_Master += 1
-        ob.save()
-    if target == 2100:
-        ob.Master += 1
-        ob.save()
-def Data_Entry(handle, current , target):
-    columns = ['ID', 'Index', 'Rating', 'Tags']
-    url = 'https://codeforces.com/api/user.rating?handle=' + handle
-    try:
-        response = requests.get(url)
-    except:
-        return
-    x = response.json()
+import logging
+
+from django.db import models
+
+from .codeforces import CodeforcesError, user_rating, user_status
+from .constants import COUNTER_TOTAL_TAG, RATING_TIERS, TIER_BY_TARGET
+from .models import Counter, Problem
+
+logger = logging.getLogger(__name__)
+
+
+def _bump_counter(tag: str, tier: str) -> None:
+    Counter.objects.get_or_create(tag_name=tag, tier=tier, defaults={"count": 0})
+    Counter.objects.filter(tag_name=tag, tier=tier).update(count=models.F("count") + 1)
+
+
+def _normalize_tag(tag: str) -> str:
+    return tag.replace(" ", "").replace("-", "")
+
+
+def _compute_window(ratings: list[dict], current: int, target: int) -> tuple[int, int] | None:
+    """Find (start, end) timestamps while the handle climbed from current → target."""
     start = 0
     end = 0
-    paisi = 0
-    for con in x['result']:
-        if start == 0 and con['newRating'] >= current and con['oldRating'] != 0:
-            start = con['ratingUpdateTimeSeconds']
-        if start >= 0:
-            end = con['ratingUpdateTimeSeconds']
-        if con['newRating'] >= target:
-            paisi = 1
+    climbed = False
+    for con in ratings:
+        if start == 0 and con["newRating"] >= current and con["oldRating"] != 0:
+            start = con["ratingUpdateTimeSeconds"]
+        if start:
+            end = con["ratingUpdateTimeSeconds"]
+        if con["newRating"] >= target:
+            climbed = True
             break
+    return (start, end) if climbed else None
 
-    if paisi == 0:
-        return
-    else:
-        ob = Counter.objects.filter(Tag_Name='users').last()
-        if ob == None:
-            ob=Counter(
-                Tag_Name = 'users',
-                Pupil = 0,
-                Specialist = 0,
-                Expert = 0,
-                Candidate_Master = 0,
-                Master = 0
-            )
-            ob.save()
-        Tag_Entry(ob,target)
-    url = 'https://codeforces.com/api/user.status?handle=' + handle + '&from=1'
+
+def ingest_handle(handle: str, current: int, target: int) -> int:
+    """Ingest submissions for a handle at a given tier. Returns problems added."""
+    tier = TIER_BY_TARGET[target]
     try:
-        response = requests.get(url)
-    except:
-        return
-    x = response.json()
-    cnt = 0
-    for sub in x['result']:
-        if start <= sub['creationTimeSeconds'] <= end and sub['verdict'] == 'OK':
-            if 'rating' in sub['problem'] and sub['problem']['rating'] > current:
-                con_id = sub['contestId']
-                index = sub['problem']['index']
-                rating = sub['problem']['rating']
-                tags = sub['problem']['tags']
-                tags.append(str(rating))
-                for i in range(len(tags)):
-                    tags[i] = tags[i].replace(" ", "");
-                    tags[i] = tags[i].replace("-", "");
-                    ob = Counter.objects.filter(Tag_Name=tags[i]).last()
-                    if ob == None:
-                        ob = Counter(
-                            Tag_Name=tags[i],
-                            Pupil=0,
-                            Specialist=0,
-                            Expert=0,
-                            Candidate_Master=0,
-                            Master=0
-                        )
-                        ob.save()
-                    Tag_Entry(ob, target)
+        ratings = user_rating(handle)
+    except CodeforcesError:
+        return 0
 
-                tags = ', '.join(tags)
-                row = [con_id, index, rating, tags]
-                if target == 1200:
-                    ob = Pupil(
-                        PID = con_id,
-                        Index = index,
-                        Rating = rating,
-                        Tags = tags
+    window = _compute_window(ratings, current, target)
+    if window is None:
+        return 0
+    start, end = window
 
-                    )
-                    if not Pupil.objects.filter(PID=con_id, Index=index).exists():
-                        ob.save()
-                elif target == 1400:
-                    ob = Specialist(
-                        PID = con_id,
-                        Index = index,
-                        Rating = rating,
-                        Tags = tags
+    _bump_counter(COUNTER_TOTAL_TAG, tier)
 
-                    )
-                    if not Specialist.objects.filter(PID=con_id, Index=index).exists():
-                        ob.save()
-                elif target == 1600:
-                    ob = Expert(
-                        PID = con_id,
-                        Index = index,
-                        Rating = rating,
-                        Tags = tags
+    try:
+        submissions = user_status(handle)
+    except CodeforcesError:
+        return 0
 
-                    )
-                    if not Expert.objects.filter(PID=con_id, Index=index).exists():
-                        ob.save()
-                elif target == 1900:
-                    ob = Candidate_Master(
-                        PID = con_id,
-                        Index = index,
-                        Rating = rating,
-                        Tags = tags
+    added = 0
+    for sub in submissions:
+        if not (start <= sub["creationTimeSeconds"] <= end):
+            continue
+        if sub["verdict"] != "OK":
+            continue
+        problem = sub["problem"]
+        rating = problem.get("rating")
+        if rating is None or rating <= current:
+            continue
+        con_id = sub["contestId"]
+        index = problem["index"]
+        tags = [_normalize_tag(t) for t in problem["tags"]] + [str(rating)]
+        for tag in tags:
+            _bump_counter(tag, tier)
+        _, created = Problem.objects.get_or_create(
+            tier=tier,
+            PID=con_id,
+            Index=index,
+            defaults={"Rating": rating, "Tags": ", ".join(tags)},
+        )
+        if created:
+            added += 1
+    logger.info("Ingested %d new problems for %s @ tier %s", added, handle, tier)
+    return added
 
-                    )
-                    if not Candidate_Master.objects.filter(PID=con_id, Index=index).exists():
-                        ob.save()
-                elif target == 2100:
-                    ob = Master(
-                        PID = con_id,
-                        Index = index,
-                        Rating = rating,
-                        Tags = tags
 
-                    )
-                    if not Master.objects.filter(PID=con_id, Index=index).exists():
-                        ob.save()
-
-    print("Data Inserted Successfully for Level", target)
+def ingest_all_tiers(handle: str) -> None:
+    prev_target = 0
+    for floor, target, _tier, _label in RATING_TIERS:
+        ingest_handle(handle, prev_target, target)
+        prev_target = target

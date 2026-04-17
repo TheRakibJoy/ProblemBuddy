@@ -1,11 +1,11 @@
-from django.http import HttpResponse
-from django.shortcuts import render,redirect
-from django.contrib.auth import authenticate,login,logout
+from django.shortcuts import render, redirect
+from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group
+from django.views.decorators.http import require_POST
 from .forms import CreateUserForm
 from django.contrib import messages
-from .decorotars import unauthenticated_user,allowed_user
+from .decorators import unauthenticated_user
 # Create your views here.
 #@login_required(login_url='login')
 def Home(request):
@@ -26,6 +26,7 @@ def LogIn(request):
       return render(request, 'login.html')
 
 
+@require_POST
 @login_required(login_url='login')
 def LogOut(request):
    logout(request)
@@ -39,7 +40,7 @@ def Register(request):
          if form.is_valid():
             user = form.save()
             handle = form.cleaned_data.get('username')
-            group = Group.objects.get(name='contestant')
+            group, _ = Group.objects.get_or_create(name='contestant')
             user.groups.add(group)
             messages.success(request,'Account was created for user '+handle)
 
@@ -49,79 +50,56 @@ def Register(request):
       return render(request, 'register.html', context)
 
 
+import random
+
+from Dataset.codeforces import CodeforcesError, user_info
+from Dataset.models import Problem
+
 from .Target import get_lo_hi
-import pandas as pd
 from .problem_giver import give_me_problem
 from .weak_tags import get_weak_tags
-from Dataset.models import Handle,Pupil,Expert,Candidate_Master,Master,Specialist,Counter
-import random
+
+
 @login_required(login_url='login')
 def Recommend(request):
     handle = str(request.user)
-    (ase, target) = get_lo_hi(handle)
-    if ase == -1:
-        return HttpResponse("No Internet Connection or Codeforces is down!!!")
-    print(ase,target)
+    current, target, tier = get_lo_hi(handle)
+    if current == -1:
+        messages.error(request, "Codeforces is unreachable. Please try again shortly.")
+        return render(request, 'recommend.html', {'problems': []})
 
-    if target == 1200:
-        Table = Pupil
-    if target == 1400:
-        Table = Specialist
-    if target == 1600:
-        Table = Expert
-    if target == 1900:
-        Table = Candidate_Master
-    if target == 2100:
-        Table = Master
+    weak_tags, _percentage = get_weak_tags(handle)
+    ranked = give_me_problem(handle, weak_tags, tier)
+    problems = list(Problem.objects.filter(tier=tier).order_by('id'))
 
-    Table = pd.DataFrame.from_records(Table.objects.all().values())
-
-    (weak_tags,percentage) = get_weak_tags(handle)
-    res = give_me_problem(handle, weak_tags,Table)
+    picks = random.sample(ranked, min(3, len(ranked))) if ranked else []
     context = {
-        'problems':[]
+        'problems': [
+            {'i': problems[i], 'Tags': [t.strip() for t in (problems[i].Tags or '').split(',')]}
+            for i in picks
+        ]
     }
-    for i in range(3):
-        random_index = random.randint(0,len(res)-1)
-        pathabo = Table.iloc[res[random_index]]
-        s = pathabo.Tags
-        Tags = s.split(',')
-        map = {'i':pathabo,'Tags':Tags}
-        context['problems'].append(map)
-    return render(request,'recommend.html',context)
+    return render(request, 'recommend.html', context)
 
-import requests
+
 @login_required(login_url='login')
 def Profile(request):
     handle = str(request.user)
-    url = 'https://codeforces.com/api/user.info?handles='+handle
     try:
-        response = requests.get(url)
-        x=response.json()
+        info_payload = user_info(handle)
+    except CodeforcesError:
+        messages.error(request, "Could not reach Codeforces to load your profile.")
+        return render(request, 'profile.html', {'handle': handle, 'weak_list': []})
 
-    except:
-        print("Not found")
-        return HttpResponse("No Internet Connection or Codeforces is down!!!")
-    (weak_tags,percentage)=get_weak_tags(handle) 
-    info = {
+    weak_tags_str, percentage = get_weak_tags(handle)
+    weak_tags = [t.strip() for t in weak_tags_str.split(',') if t.strip()] if weak_tags_str else []
+    weak_list = sorted(zip(weak_tags, percentage), key=lambda p: p[1], reverse=True)
+
+    context = {
+        'handle': handle,
+        'maxRating': int(info_payload.get('maxRating', 0)),
+        'maxRank': info_payload.get('maxRank', 'unrated'),
+        'photo': info_payload.get('titlePhoto', ''),
+        'weak_list': weak_list,
     }
-    x=x["result"]
-    x=x[0]
-    info['handle']=handle
-    info['maxRating'] = int(x['maxRating'])
-    info['maxRank'] = x['maxRank']
-    info['photo'] = x['titlePhoto']
-    weak_list=[]
-    weak_tags=weak_tags.split(',')
-    for i in range(len(percentage)):
-        weak_list.append(list([weak_tags[i],percentage[i]]))
-    #sorting
-    for i in range(len(weak_list)):
-        for j in range(i+1,len(weak_list)):
-            if weak_list[j][1]>weak_list[i][1]:
-                tmp = weak_list[i]
-                weak_list[i]=weak_list[j]
-                weak_list[j]=tmp
-
-    info['weak_list']=weak_list
-    return render(request,'profile.html',info)
+    return render(request, 'profile.html', context)

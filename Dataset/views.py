@@ -1,36 +1,34 @@
-from django.shortcuts import render,redirect
-from .models import Handle
-from django.http import HttpResponse
-# Create your views here.
 from django.contrib import messages
-from .add_data import Data_Entry
-from  django.contrib.auth.decorators import login_required
-from Recommender.decorotars import allowed_user
-@login_required(login_url='login')
-@allowed_user(['admin'])
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import redirect, render
+
+from Recommender.decorators import allowed_user
+
+from .add_data import ingest_all_tiers
+from .codeforces import handle_exists
+from .models import Handle
+
+
+@login_required(login_url="login")
+@allowed_user(["admin"])
 def Train(request):
-    if request.method == 'POST':
-        handle = request.POST.get('handle')
-        if (handle is not None):
-            print(handle)
-            handle = handle.lower()
-            try:
-                obj = Handle.objects.get(handle=handle)
-                messages.error(request, "Handle Data Already Trained.")
-                return redirect('train')
-            except Handle.DoesNotExist:
-                ob = Handle(
-                    handle=handle
-                )
-                ob.save()
-                Data_Entry(handle, 0, 1200)
-                Data_Entry(handle, 1201, 1400)
-                Data_Entry(handle, 1401, 1600)
-                Data_Entry(handle, 1601, 1900)
-                Data_Entry(handle, 1901, 2100)
-                messages.success(request,"Data Trained for Handle : "+handle)
-                return redirect('train')
-        else:
-            messages.error(request, "Handle Not Found.")
-    else:
-        return render(request, 'input_handle.html')
+    if request.method != "POST":
+        return render(request, "input_handle.html")
+
+    handle = (request.POST.get("handle") or "").strip().lower()
+    if not handle:
+        messages.error(request, "Handle is required.")
+        return redirect("train")
+
+    if Handle.objects.filter(handle=handle).exists():
+        messages.error(request, f"Handle {handle!r} is already trained.")
+        return redirect("train")
+
+    if not handle_exists(handle):
+        messages.error(request, f"Codeforces handle {handle!r} not found.")
+        return redirect("train")
+
+    Handle.objects.create(handle=handle)
+    ingest_all_tiers(handle)
+    messages.success(request, f"Data trained for handle: {handle}")
+    return redirect("train")

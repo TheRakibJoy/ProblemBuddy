@@ -1,20 +1,22 @@
 {% extends 'main.html' %}
 
-{% block content%}
-
-
-   <div style=  "display: grid; place-content: center; min-height: 80vh">
-        <form method="POST" style="background: ghostwhite; display: flex; flex-direction: column; align-items: center; border: 1px solid rgba(0,0,0,0.3); padding: 35px; box-shadow: 2px 4px 13px rgba(0,0,0,0.2); border-radius: 10px;">
-            {% csrf_token %}
-            <label style="margin-bottom: 8px;">Enter a Handle Which is Inspiring to You</label>
-            <input style="margin-bottom: 8px; padding: 4px; border-radius: 8px; outline: none; border: 1px solid dimgray;" type="text" name="handle">
-            <button style="padding: 4px 15px;">Submit</button>
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-6">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h4 class="card-title text-center">Train with an inspiring handle</h4>
+        <p class="text-muted text-center">Ingest the solved problems of a strong Codeforces user to enrich the recommender.</p>
+        <form method="post">
+          {% csrf_token %}
+          <div class="mb-3">
+            <label for="id_handle" class="form-label">Codeforces handle</label>
+            <input id="id_handle" type="text" name="handle" class="form-control" required>
+          </div>
+          <button type="submit" class="btn btn-primary w-100">Submit</button>
         </form>
-       {% for message in messages %}
-       <div class="alert alert-primary" role="alert">
-            <p id="messages">{{message}}</p>
-       </div>
-       {% endfor%}
+      </div>
     </div>
-
+  </div>
+</div>
 {% endblock %}
