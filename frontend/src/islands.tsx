@@ -7,6 +7,7 @@ import { OnboardingPage } from "./onboarding/OnboardingPage";
 import { ProfilePage } from "./profile/ProfilePage";
 import { SettingsPage } from "./settings/SettingsPage";
 import { TrainForm } from "./train/TrainForm";
+import { TrainingWatcher } from "./train/TrainingWatcher";
 
 type IslandProps = Record<string, unknown>;
 
@@ -17,6 +18,7 @@ const ISLANDS: Record<string, ComponentType<IslandProps>> = {
   profile: ProfilePage as ComponentType<IslandProps>,
   settings: SettingsPage as ComponentType<IslandProps>,
   train: TrainForm as ComponentType<IslandProps>,
+  "training-watcher": TrainingWatcher as ComponentType<IslandProps>,
 };
 
 export function mountIslands() {

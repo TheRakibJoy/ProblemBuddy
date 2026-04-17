@@ -5,8 +5,7 @@ import type {
   ProfileSummary,
   RecommendResponse,
   SettingsPayload,
-  TrainEnqueueResponse,
-  TrainStatusResponse,
+  TrainingJob,
 } from "./types";
 
 export interface RecommendFilters {
@@ -67,12 +66,16 @@ export function deleteAccount(password: string) {
 }
 
 export function enqueueTrain(handle: string) {
-  return apiFetch<TrainEnqueueResponse>("/api/train/", {
+  return apiFetch<TrainingJob>("/api/train/", {
     method: "POST",
     body: { handle },
   });
 }
 
-export function fetchTrainStatus(taskId: string) {
-  return apiFetch<TrainStatusResponse>(`/api/train/${taskId}/`);
+export function fetchTrainStatus(jobId: number) {
+  return apiFetch<TrainingJob>(`/api/train/${jobId}/`);
+}
+
+export function fetchActiveTraining() {
+  return apiFetch<{ job: TrainingJob | null }>("/api/train/active/");
 }

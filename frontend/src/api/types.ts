@@ -60,16 +60,16 @@ export interface HandleCheckResponse {
 
 export type InteractionStatus = "solved" | "not_interested" | "hidden";
 
-export interface TrainEnqueueResponse {
-  task_id: string | null;
-  handle: string;
-  sync?: boolean;
-}
+export type TrainingStatus = "queued" | "running" | "success" | "failed";
 
-export interface TrainStatusResponse {
-  task_id: string;
-  state: string;
-  info: { tier?: string; done?: number; total?: number } | null;
-  ready: boolean;
-  successful: boolean | null;
+export interface TrainingJob {
+  id: number;
+  handle: string;
+  status: TrainingStatus;
+  current_tier: string;
+  done: number;
+  total: number;
+  error: string;
+  created_at: string;
+  updated_at: string;
 }

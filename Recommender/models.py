@@ -34,6 +34,41 @@ class Profile(models.Model):
         return f"Profile<{self.user_id}>"
 
 
+TRAINING_STATUS_CHOICES = [
+    ("queued", "Queued"),
+    ("running", "Running"),
+    ("success", "Success"),
+    ("failed", "Failed"),
+]
+
+
+class TrainingJob(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="training_jobs",
+        null=True,
+        blank=True,
+    )
+    handle = models.CharField(max_length=100)
+    status = models.CharField(
+        max_length=16, choices=TRAINING_STATUS_CHOICES, default="queued"
+    )
+    current_tier = models.CharField(max_length=64, blank=True, default="")
+    done = models.PositiveIntegerField(default=0)
+    total = models.PositiveIntegerField(default=9)
+    error = models.TextField(blank=True, default="")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        indexes = [models.Index(fields=["user", "-created_at"])]
+        ordering = ["-created_at"]
+
+    def __str__(self) -> str:
+        return f"Train<{self.handle}:{self.status}>"
+
+
 class ProblemInteraction(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,

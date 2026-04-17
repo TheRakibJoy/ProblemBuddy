@@ -34,5 +34,6 @@ urlpatterns = [
     path("api/settings/", api.settings_view, name="api_settings"),
     path("api/account/delete/", api.account_delete_view, name="api_account_delete"),
     path("api/train/", api.train_enqueue_view, name="api_train_enqueue"),
+    path("api/train/active/", api.train_active_view, name="api_train_active"),
     path("api/train/<str:task_id>/", api.train_status_view, name="api_train_status"),
 ]

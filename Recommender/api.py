@@ -13,8 +13,9 @@ from Dataset.constants import RATING_TIERS
 from Dataset.models import Problem
 
 from .Target import get_lo_hi
-from .models import Profile, ProblemInteraction
+from .models import Profile, ProblemInteraction, TrainingJob
 from .problem_giver import recommend
+from .training import start_training_job
 from .weak_tags import get_weak_tags
 
 logger = logging.getLogger(__name__)
@@ -227,6 +228,20 @@ def account_delete_view(request: HttpRequest) -> HttpResponse:
     return HttpResponse(status=204)
 
 
+def _job_payload(job: TrainingJob) -> dict:
+    return {
+        "id": job.id,
+        "handle": job.handle,
+        "status": job.status,
+        "current_tier": job.current_tier,
+        "done": job.done,
+        "total": job.total,
+        "error": job.error,
+        "created_at": job.created_at.isoformat(),
+        "updated_at": job.updated_at.isoformat(),
+    }
+
+
 @require_POST
 @login_required_json
 def train_enqueue_view(request: HttpRequest) -> JsonResponse:
@@ -240,36 +255,50 @@ def train_enqueue_view(request: HttpRequest) -> JsonResponse:
     if not handle_exists(handle):
         return JsonResponse({"detail": "Codeforces handle not found"}, status=400)
 
-    from Dataset.tasks import train_handle
+    in_flight = TrainingJob.objects.filter(
+        user=request.user, status__in=("queued", "running")
+    ).first()
+    if in_flight:
+        return JsonResponse(
+            {"detail": "Another training is already in progress.", "job": _job_payload(in_flight)},
+            status=409,
+        )
 
-    try:
-        async_result = train_handle.delay(handle)
-        return JsonResponse({"task_id": async_result.id, "handle": handle})
-    except Exception:
-        logger.exception("failed to enqueue train_handle")
-        # Fall back to synchronous execution in dev without a broker.
-        from Dataset.add_data import ingest_all_tiers
-
-        ingest_all_tiers(handle)
-        return JsonResponse({"task_id": None, "handle": handle, "sync": True})
+    job = TrainingJob.objects.create(user=request.user, handle=handle)
+    start_training_job(job.id)
+    return JsonResponse(_job_payload(job), status=202)
 
 
 @require_GET
 @login_required_json
 def train_status_view(request: HttpRequest, task_id: str) -> JsonResponse:
     try:
-        from celery.result import AsyncResult
+        job = TrainingJob.objects.get(pk=int(task_id), user=request.user)
+    except (TrainingJob.DoesNotExist, ValueError):
+        return JsonResponse({"detail": "not found"}, status=404)
+    return JsonResponse(_job_payload(job))
 
-        result = AsyncResult(task_id)
-        return JsonResponse(
-            {
-                "task_id": task_id,
-                "state": result.state,
-                "info": result.info if isinstance(result.info, dict) else None,
-                "ready": result.ready(),
-                "successful": result.successful() if result.ready() else None,
-            }
+
+@require_GET
+@login_required_json
+def train_active_view(request: HttpRequest) -> JsonResponse:
+    """Latest active training job for the user, if any (or the most recent one
+    within the last 5 minutes if it just completed so the UI can show the toast).
+    """
+    from django.utils import timezone
+    from datetime import timedelta
+
+    job = TrainingJob.objects.filter(
+        user=request.user, status__in=("queued", "running")
+    ).first()
+    if job is None:
+        job = (
+            TrainingJob.objects.filter(
+                user=request.user,
+                status__in=("success", "failed"),
+                updated_at__gte=timezone.now() - timedelta(minutes=5),
+            )
+            .order_by("-updated_at")
+            .first()
         )
-    except Exception:
-        logger.exception("failed to look up task status")
-        return JsonResponse({"task_id": task_id, "state": "UNKNOWN"}, status=200)
+    return JsonResponse({"job": _job_payload(job) if job else None})
