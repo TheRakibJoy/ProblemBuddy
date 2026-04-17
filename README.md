@@ -75,12 +75,106 @@ You need these on your machine before starting:
 | npm | 10+ | `npm --version` |
 | Git | any recent | `git --version` |
 
-macOS install tips:
+### Install the prerequisites
+
+<details>
+<summary><strong>macOS</strong> (Homebrew)</summary>
 
 ```bash
-brew install python@3.12 node           # via Homebrew
-# or use pyenv + nvm if you prefer version managers
+# Install Homebrew if you don't have it:
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+brew install python@3.12 node git
 ```
+
+Prefer version managers? Use `pyenv` for Python and `nvm` for Node:
+
+```bash
+brew install pyenv nvm
+pyenv install 3.12.5 && pyenv global 3.12.5
+nvm install 20 && nvm use 20
+```
+
+</details>
+
+<details>
+<summary><strong>Linux</strong> (Debian/Ubuntu, Fedora, Arch)</summary>
+
+**Debian / Ubuntu (22.04+):**
+
+```bash
+sudo apt update
+sudo apt install -y python3.12 python3.12-venv python3-pip git
+# Node 20 (NodeSource):
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt install -y nodejs
+```
+
+**Fedora:**
+
+```bash
+sudo dnf install -y python3.12 python3-virtualenv git nodejs
+```
+
+**Arch / Manjaro:**
+
+```bash
+sudo pacman -S --needed python python-pip nodejs npm git
+```
+
+Prefer a version manager? Install `pyenv` for Python and `nvm` for Node:
+
+```bash
+curl -fsSL https://pyenv.run | bash
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+exec "$SHELL"       # restart shell, then:
+pyenv install 3.12.5 && pyenv global 3.12.5
+nvm install 20 && nvm use 20
+```
+
+</details>
+
+<details>
+<summary><strong>Windows</strong> (PowerShell + winget, or WSL)</summary>
+
+**Native Windows (PowerShell, Windows 10+):**
+
+```powershell
+# Run PowerShell as administrator:
+winget install Python.Python.3.12 OpenJS.NodeJS.LTS Git.Git
+```
+
+After install, close and reopen PowerShell so the new `python`, `node`, and `git`
+commands are on your `PATH`. Verify:
+
+```powershell
+python --version     # Python 3.12.x
+node --version       # v20.x
+git --version
+```
+
+All the shell commands below use Unix syntax. On Windows PowerShell, translate:
+
+| Unix | PowerShell equivalent |
+| --- | --- |
+| `source .venv/bin/activate` | `.venv\Scripts\Activate.ps1` |
+| `cp .env.example .env` | `Copy-Item .env.example .env` |
+| `rm -f db.sqlite3` | `Remove-Item -Force db.sqlite3 -ErrorAction SilentlyContinue` |
+| `export X=y` | `$env:X = "y"` |
+
+If PowerShell blocks the activate script, run once:
+`Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`.
+
+**Windows Subsystem for Linux (WSL2, recommended):**
+
+```powershell
+wsl --install -d Ubuntu-22.04   # reboot when prompted
+```
+
+Then follow the **Debian / Ubuntu** section above inside your WSL shell —
+everything else in this README works unchanged.
+
+</details>
 
 ## Run it locally (step by step)
 
